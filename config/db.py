@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, MetaData
 
-engine = create_engine("mysql+pymysql://root:root@localhost:3306/challengedb")
+engine = create_engine("mysql+pymysql://root:root@localhost:3306/challengedb?autocommit=true")
 
 meta = MetaData()
 
