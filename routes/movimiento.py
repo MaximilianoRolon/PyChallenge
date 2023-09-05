@@ -26,17 +26,12 @@ def registrar_movimiento(info_movimiento: movimiento_schema.Movimiento, db: Sess
 
 
 # Eliminar un movimiento
-@movimiento.post("/movimiento/eliminar/{id}")
-def eliminar_movimiento(id: int, db: Session = Depends(get_db)):
-    return crud.eliminar_movimiento(db=db, id=id)
+@movimiento.post("/movimiento/eliminar")
+def eliminar_movimiento(info_movimientoId: movimiento_schema.MovimientoId, db: Session = Depends(get_db)):
+    return crud.eliminar_movimiento(db=db, info_movimientoId=info_movimientoId)
 
 
 # Consultar un movimiento
 @movimiento.get("/movimientos/{id}")
 def consultar_movimiento(id: int, db: Session = Depends(get_db)):
     return crud.consultar_movimiento(db=db, id=id)
-
-
-
-
-# TODO Añadir response_model y tags a todas las rutas
