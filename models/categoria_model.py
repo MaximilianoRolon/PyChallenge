@@ -1,6 +1,5 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
-from models.categoria_cliente_model import CategoriaCliente
 from config.db import Base
 
 

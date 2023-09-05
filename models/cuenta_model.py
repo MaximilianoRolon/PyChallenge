@@ -1,6 +1,5 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.orm import relationship
-from models.movimiento_model import Movimiento
 from config.db import Base
 
 

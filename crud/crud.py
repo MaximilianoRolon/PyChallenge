@@ -4,10 +4,10 @@ import requests
 from sqlalchemy import update, delete
 from sqlalchemy.orm import Session
 from starlette.responses import Response
-from starlette.status import HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST, HTTP_406_NOT_ACCEPTABLE
+from starlette.status import HTTP_406_NOT_ACCEPTABLE
 
 from models import cuenta_model, cliente_model, movimiento_model, categoria_cliente_model, categoria_model
-from schemas import cuenta_schema, cliente_schema, movimiento_schema, cliente_categoria_schema
+from schemas import cliente_schema, movimiento_schema, cliente_categoria_schema
 
 
 # Registro de cliente en la DB tomando el schema de cliente
@@ -22,6 +22,7 @@ def registrar_cliente(db: Session, info_cliente: cliente_schema.Cliente):
     db.refresh(db_user)
 
     return db_user
+
 
 # Edicion de cliente en la DB tomando el schema de cliente
 def editar_cliente(db: Session, info_cliente: cliente_schema.ClienteEdit):
@@ -40,8 +41,8 @@ def listar_clientes(db: Session):
 
 
 # Eliminacion de cliente en la DB tomando el schema de id de cliente
-def eliminar_cliente(db: Session, info_clienteId: cliente_schema.ClienteId):
-    cliente_result = db.query(cliente_model.Cliente).filter(cliente_model.Cliente.id == info_clienteId.id).first()
+def eliminar_cliente(db: Session, info_cliente_id: cliente_schema.ClienteId):
+    cliente_result = db.query(cliente_model.Cliente).filter(cliente_model.Cliente.id == info_cliente_id.id).first()
     if cliente_result:
         cuenta_result = db.query(cuenta_model.Cuenta).filter(cuenta_model.Cuenta.cliente_id == cliente_result.id).all()
         # Loop de cuentas del cliente
@@ -53,9 +54,9 @@ def eliminar_cliente(db: Session, info_clienteId: cliente_schema.ClienteId):
                 db.execute(delete(cuenta_model.Cuenta).where(cuenta_model.Cuenta.cliente_id == cliente_result.id))
                 db.commit()
         db.execute(delete(categoria_cliente_model.CategoriaCliente).where(
-            categoria_cliente_model.CategoriaCliente.cliente_id == info_clienteId.id))
+            categoria_cliente_model.CategoriaCliente.cliente_id == info_cliente_id.id))
         db.commit()
-        db.execute(delete(cliente_model.Cliente).where(cliente_model.Cliente.id == info_clienteId.id))
+        db.execute(delete(cliente_model.Cliente).where(cliente_model.Cliente.id == info_cliente_id.id))
         db.commit()
         result = cliente_result
     else:
@@ -79,28 +80,33 @@ def añadir_cliente_a_categoria(db: Session, info_cliente_categoria: cliente_cat
         result = Response(status_code=HTTP_406_NOT_ACCEPTABLE)
     return result
 
+
 # Consulta de cuentas y categorias tomando el id del cliente
-def consultar_cuentas_y_categorias(db: Session, id: int):
-    cliente_result = db.query(cliente_model.Cliente).filter(cliente_model.Cliente.id == id).first()
+def consultar_cuentas_y_categorias(db: Session, cliente_id: int):
+    cliente_result = db.query(cliente_model.Cliente).filter(cliente_model.Cliente.id == cliente_id).first()
     if cliente_result:
-        cuenta_result = db.query(cuenta_model.Cuenta).filter(cuenta_model.Cuenta.cliente_id == id).all()
-        categoria_cliente_result = db.query(categoria_model.Categoria).join(categoria_cliente_model.CategoriaCliente, categoria_model.Categoria.id == categoria_cliente_model.CategoriaCliente.categoria_id).filter(categoria_cliente_model.CategoriaCliente.cliente_id == id).all()
-        result =  cuenta_result, categoria_cliente_result
+        cuenta_result = db.query(cuenta_model.Cuenta).filter(cuenta_model.Cuenta.cliente_id == cliente_id).all()
+        categoria_cliente_result = db.query(
+            categoria_model.Categoria).join(categoria_cliente_model.CategoriaCliente,
+                                            categoria_model.Categoria.id ==
+                                            categoria_cliente_model.CategoriaCliente.categoria_id).filter(
+            categoria_cliente_model.CategoriaCliente.cliente_id == id).all()
+        result = cuenta_result, categoria_cliente_result
     else:
         result = Response(status_code=HTTP_406_NOT_ACCEPTABLE)
     return result
 
 
 # Consulta de saldo tomando id del cliente
-def consultar_saldo(db: Session, id: int, dolar=False):
+def consultar_saldo(db: Session, cliente_id: int, dolar=False):
     result = {}
-    cliente_result = db.query(cliente_model.Cliente).filter(cliente_model.Cliente.id == id).first()
+    cliente_result = db.query(cliente_model.Cliente).filter(cliente_model.Cliente.id == cliente_id).first()
     if cliente_result:
         cuenta_result = db.query(cuenta_model.Cuenta).filter(cuenta_model.Cuenta.cliente_id == cliente_result.id).all()
         # Loop de cuentas del cliente
         if cuenta_result:
             for cuenta in cuenta_result:
-                movimiento_result = db.query(cuenta_model.Movimiento).filter(
+                movimiento_result = db.query(movimiento_model.Movimiento).filter(
                     movimiento_model.Movimiento.cuenta_id == cuenta.id).all()
                 if movimiento_result:
                     result[cuenta.id] = 0
@@ -111,7 +117,7 @@ def consultar_saldo(db: Session, id: int, dolar=False):
                             result[cuenta.id] = result[cuenta.id] - movimiento.importe
 
                     # Pasar a dolar si el parametro opcional esta en True
-                    if dolar == True:
+                    if dolar:
                         api_url = "https://www.dolarsi.com/api/api.php?type=valoresprincipales"
                         response = requests.get(api_url)
                         response.json()
@@ -134,7 +140,8 @@ def registrar_movimiento(db: Session, info_movimiento: movimiento_schema.Movimie
     cuenta_result = db.query(cuenta_model.Cuenta).filter(cuenta_model.Cuenta.id == info_movimiento.cuenta_id).first()
     if cuenta_result:
         if info_movimiento.tipo == "e":
-            movimiento_result = db.query(movimiento_model.Movimiento).filter(movimiento_model.Movimiento.cuenta_id == info_movimiento.cuenta_id).all()
+            movimiento_result = db.query(movimiento_model.Movimiento).filter(
+                movimiento_model.Movimiento.cuenta_id == info_movimiento.cuenta_id).all()
             # Loop de movimientos de la cuenta
             saldo = 0
             if movimiento_result:
@@ -147,32 +154,34 @@ def registrar_movimiento(db: Session, info_movimiento: movimiento_schema.Movimie
             if saldo < info_movimiento.importe:
                 result = Response(status_code=HTTP_406_NOT_ACCEPTABLE)
 
-        if result == None:
+        if result is None:
             fecha_actual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-            db_user = movimiento_model.Movimiento(cuenta_id=info_movimiento.cuenta_id, tipo=info_movimiento.tipo, importe=info_movimiento.importe, fecha=fecha_actual)
+            db_user = movimiento_model.Movimiento(cuenta_id=info_movimiento.cuenta_id, tipo=info_movimiento.tipo,
+                                                  importe=info_movimiento.importe, fecha=fecha_actual)
             db.add(db_user)
             db.commit()
             result = db_user
         return result
 
-#Eliminacion de movimiento tomando el schema de id de movimiento
-def eliminar_movimiento(db: Session, info_movimientoId: movimiento_schema.MovimientoId):
-    movimiento_result = db.query(movimiento_model.Movimiento).filter(movimiento_model.Movimiento.id == info_movimientoId.id).first()
+
+# Eliminacion de movimiento tomando el schema de id de movimiento
+def eliminar_movimiento(db: Session, info_movimiento_id: movimiento_schema.MovimientoId):
+    movimiento_result = db.query(movimiento_model.Movimiento).filter(
+        movimiento_model.Movimiento.id == info_movimiento_id.id).first()
     if movimiento_result:
-        db.execute(delete(movimiento_model.Movimiento).where(movimiento_model.Movimiento.id == info_movimientoId.id))
+        db.execute(delete(movimiento_model.Movimiento).where(movimiento_model.Movimiento.id == info_movimiento_id.id))
         db.commit()
         return movimiento_result
     else:
         return Response(status_code=HTTP_406_NOT_ACCEPTABLE)
 
 
-
 # Consulta de movimiento tomando el id de movimiento
-def consultar_movimiento(db: Session, id: int):
-    movimiento_result = db.query(movimiento_model.Movimiento).filter(movimiento_model.Movimiento.id == id).first()
+def consultar_movimiento(db: Session, movimiento_id: int):
+    movimiento_result = db.query(movimiento_model.Movimiento).filter(
+        movimiento_model.Movimiento.id == movimiento_id).first()
     if movimiento_result:
         result = movimiento_result
     else:
         result = Response(status_code=HTTP_406_NOT_ACCEPTABLE)
     return result
-

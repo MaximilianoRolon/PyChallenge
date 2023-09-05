@@ -1,6 +1,4 @@
-import pytest
 from fastapi.testclient import TestClient
-from pydantic import json
 
 from app import app
 
@@ -9,16 +7,16 @@ client = TestClient(app)
 
 def test_consultar_cuentas_y_categorias():
 
-    response = client.get("/clientes/1")
+    response = client.get("/clientes/info?cliente_id=1")
     assert response.status_code == 200 or response.status_code == 406
 
-    response = client.get("/clientes/2")
+    response = client.get("/clientes/info?cliente_id=2")
     assert response.status_code == 200 or response.status_code == 406
 
-    response = client.get("/clientes/24212")
+    response = client.get("/clientes/info?cliente_id=24212")
     assert response.status_code == 200 or response.status_code == 406
 
-    response = client.get("/clientes/asdasd")
+    response = client.get("/clientes/info?cliente_id=asdasd")
     assert response.status_code == 422
 
 
@@ -29,43 +27,43 @@ def test_listar_clientes():
 
 
 def test_consultar_saldo():
-    response = client.get("/clientes/saldo/1")
+    response = client.get("/clientes/saldo?cliente_id=1")
     assert response.status_code == 200 or response.status_code == 406
 
-    response = client.get("/clientes/saldo/2")
+    response = client.get("/clientes/saldo?cliente_id=2")
     assert response.status_code == 200 or response.status_code == 406
 
-    response = client.get("/clientes/saldo/24212")
+    response = client.get("/clientes/saldo?cliente_id=24212")
     assert response.status_code == 200 or response.status_code == 406
 
-    response = client.get("/clientes/saldo/asdasd")
+    response = client.get("/clientes/saldo?cliente_id=asdasd")
     assert response.status_code == 422
 
 
 def test_consultar_saldo_dolar():
-    response = client.get("/clientes/saldo/dolar/1")
+    response = client.get("/clientes/saldo/dolar?cliente_id=1")
     assert response.status_code == 200 or response.status_code == 406
 
-    response = client.get("/clientes/saldo/dolar/2")
+    response = client.get("/clientes/saldo/dolar?cliente_id=2")
     assert response.status_code == 200 or response.status_code == 406
 
-    response = client.get("/clientes/saldo/dolar/24212")
+    response = client.get("/clientes/saldo/dolar?cliente_id=24212")
     assert response.status_code == 200 or response.status_code == 406
 
-    response = client.get("/clientes/saldo/dolar/asdasd")
+    response = client.get("/clientes/saldo/dolar?cliente_id=asdasd")
     assert response.status_code == 422
 
 
 def test_consultar_movimiento():
 
-    response = client.get("/movimientos/1")
+    response = client.get("/movimientos?movimiento_id=1")
     assert response.status_code == 200 or response.status_code == 406
 
-    response = client.get("/movimientos/2")
+    response = client.get("/movimientos?movimiento_id=2")
     assert response.status_code == 200 or response.status_code == 406
 
-    response = client.get("/movimientos/24212")
+    response = client.get("/movimientos?movimiento_id=24212")
     assert response.status_code == 200 or response.status_code == 406
 
-    response = client.get("/movimientos/asdasd")
+    response = client.get("/movimientos?movimiento_id=asdasd")
     assert response.status_code == 422
