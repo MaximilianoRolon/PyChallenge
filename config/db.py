@@ -1,7 +1,11 @@
 from sqlalchemy import create_engine, MetaData
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 
-engine = create_engine("mysql+pymysql://root:root@localhost:3306/challengedb?autocommit=true")
+engine = create_engine("mysql+pymysql://root:root@localhost:3306/challengedb?autocommit=true",echo=True)
 
-meta = MetaData()
+SessionLocal = sessionmaker(autoflush=False, bind=engine)
 
-conn = engine.connect()
+Base = declarative_base()
+
+# TODO ver en la doc
