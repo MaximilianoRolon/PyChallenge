@@ -6,3 +6,11 @@ class Categoria(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class CategoriaOut(BaseModel):
+    id: int
+    nombre: str
+
+    class Config:
+        orm_mode = True

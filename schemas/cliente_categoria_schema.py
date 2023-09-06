@@ -7,3 +7,12 @@ class ClienteCategoria(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class ClienteCategoriaOut(BaseModel):
+    id: int
+    cliente_id: int
+    categoria_id: int
+
+    class Config:
+        orm_mode = True

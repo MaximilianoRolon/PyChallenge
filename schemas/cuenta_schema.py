@@ -6,3 +6,10 @@ class Cuenta(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class CuentaOut(BaseModel):
+    cliente_id: int
+
+    class Config:
+        orm_mode = True

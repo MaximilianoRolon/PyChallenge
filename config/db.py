@@ -7,3 +7,11 @@ engine = create_engine("mysql+pymysql://root:root@localhost:3306/challengedb?aut
 SessionLocal = sessionmaker(autoflush=False, bind=engine)
 
 Base = declarative_base()
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

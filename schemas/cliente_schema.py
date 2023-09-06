@@ -1,3 +1,5 @@
+from typing import Dict
+
 from pydantic import BaseModel
 
 
@@ -21,3 +23,8 @@ class ClienteId(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class ClienteOut(BaseModel):
+    id: int
+    nombre: str
